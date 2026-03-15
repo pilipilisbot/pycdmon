@@ -1,4 +1,4 @@
-# cdmon-domains
+# pycdmon
 
 Professional Python client for cdmon Domains & DNS API.
 
@@ -11,7 +11,7 @@ Professional Python client for cdmon Domains & DNS API.
 ## Install
 
 ```bash
-pip install cdmon-domains
+pip install pycdmon
 ```
 
 Or from source:
@@ -23,7 +23,7 @@ pip install -e .[dev]
 ## Quickstart
 
 ```python
-from cdmon_domains import CdmonDomainsClient
+from pycdmon import CdmonDomainsClient
 
 with CdmonDomainsClient(api_key="YOUR_API_KEY") as client:
     result = client.check("example.com")
@@ -34,13 +34,31 @@ with CdmonDomainsClient(api_key="YOUR_API_KEY") as client:
 
 ```python
 import asyncio
-from cdmon_domains import AsyncCdmonDomainsClient
+from pycdmon import AsyncCdmonDomainsClient
 
 async def main() -> None:
     async with AsyncCdmonDomainsClient(api_key="YOUR_API_KEY") as client:
         print(await client.check("example.com"))
 
 asyncio.run(main())
+```
+
+## CLI (`cdmon`)
+
+After installation, a `cdmon` command is available:
+
+```bash
+export CDMON_API_KEY="your_api_key"
+cdmon check example.com
+cdmon info example.com
+cdmon balance
+cdmon status check
+```
+
+You can also pass the key inline:
+
+```bash
+cdmon --api-key "$CDMON_API_KEY" check example.com
 ```
 
 ## Supported operations
@@ -55,7 +73,7 @@ asyncio.run(main())
 ## Error handling
 
 ```python
-from cdmon_domains import CdmonApiError, CdmonDomainsClient
+from pycdmon import CdmonApiError, CdmonDomainsClient
 
 try:
     with CdmonDomainsClient(api_key="...") as client:
@@ -77,7 +95,7 @@ This repository is structured to be easy for coding agents:
 
 Suggested autonomous loop for agents:
 
-1. Add/update behavior in `src/cdmon_domains`
+1. Add/update behavior in `src/pycdmon`
 2. Add/adjust tests in `tests/`
 3. Run `ruff check . && pytest`
 4. Keep commits small and descriptive

@@ -1,4 +1,4 @@
-from cdmon_domains import CdmonDomainsClient
+from pycdmon import CdmonDomainsClient
 
 API_KEY = "YOUR_API_KEY"
 

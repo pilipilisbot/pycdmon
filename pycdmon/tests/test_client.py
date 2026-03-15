@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from cdmon_domains import CdmonApiError, CdmonDomainsClient
+from pycdmon import CdmonApiError, CdmonDomainsClient
 
 
 @pytest.fixture
