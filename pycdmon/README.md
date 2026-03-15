@@ -51,6 +51,14 @@ After installation, a `cdmon` command is available:
 export CDMON_API_KEY="your_api_key"
 cdmon check example.com
 cdmon info example.com
+cdmon authcode example.com
+cdmon renew example.com --period 1
+cdmon transfer example.com 'AUTH-CODE'
+cdmon dns-records example.com
+cdmon dns-create example.com --host @ --type A --destination 1.2.3.4 --ttl 900
+cdmon dns-delete example.com --host @ --type A
+cdmon price com create
+cdmon periods com renew
 cdmon balance
 cdmon status check
 ```
