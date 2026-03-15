@@ -28,11 +28,57 @@ def build_parser() -> argparse.ArgumentParser:
     info.add_argument("domain")
     info.add_argument("--authcode", default=None)
 
+    authcode = sub.add_parser("authcode", help="Get domain authcode")
+    authcode.add_argument("domain")
+
     status = sub.add_parser("status", help="Check if endpoint action is available")
     status.add_argument("action", help="action name, e.g. check, renew, getprice")
 
     domains = sub.add_parser("domains", help="List domains")
     domains.add_argument("--no-extended-info", action="store_true", help="Disable extended info")
+
+    renew = sub.add_parser("renew", help="Renew domain")
+    renew.add_argument("domain")
+    renew.add_argument("--period", type=int, default=1)
+
+    transfer = sub.add_parser("transfer", help="Transfer domain")
+    transfer.add_argument("domain")
+    transfer.add_argument("authcode")
+
+    restore = sub.add_parser("restore", help="Restore domain")
+    restore.add_argument("domain")
+
+    autore = sub.add_parser("autorenewal", help="Get domain auto-renewal status")
+    autore.add_argument("domain")
+
+    autore_manage = sub.add_parser("autorenewal-manage", help="Enable/disable domain auto-renewal")
+    autore_manage.add_argument("domain")
+    autore_manage.add_argument("action", choices=["enable", "disable"])
+    autore_manage.add_argument("--payment-method", default="card")
+
+    dns = sub.add_parser("dns-records", help="List DNS records")
+    dns.add_argument("domain")
+
+    dns_create = sub.add_parser("dns-create", help="Create DNS record")
+    dns_create.add_argument("domain")
+    dns_create.add_argument("--host", required=True)
+    dns_create.add_argument("--type", dest="type_", required=True)
+    dns_create.add_argument("--destination", required=True)
+    dns_create.add_argument("--ttl", type=int, default=900)
+    dns_create.add_argument("--priority", type=int)
+
+    dns_delete = sub.add_parser("dns-delete", help="Delete DNS record")
+    dns_delete.add_argument("domain")
+    dns_delete.add_argument("--host", required=True)
+    dns_delete.add_argument("--type", dest="type_", required=True)
+
+    get_price = sub.add_parser("price", help="Get operation price by TLD")
+    get_price.add_argument("tld")
+    get_price.add_argument("action", choices=["create", "renew", "transfer", "restore"])
+
+    get_periods = sub.add_parser("periods", help="Get allowed periods by TLD")
+    get_periods.add_argument("tld")
+    get_periods.add_argument("action", choices=["create", "renew"])
 
     sub.add_parser("balance", help="Get account balance summary")
 
@@ -57,10 +103,46 @@ def main(argv: list[str] | None = None) -> int:
                 _print_json(client.check(args.domain))
             elif args.command == "info":
                 _print_json(client.info(args.domain, authcode=args.authcode))
+            elif args.command == "authcode":
+                _print_json(client.authcode(args.domain))
             elif args.command == "status":
                 _print_json(client.status(args.action))
             elif args.command == "domains":
                 _print_json(client.list_domains(extended_info=not args.no_extended_info))
+            elif args.command == "renew":
+                _print_json(client.renew(args.domain, period=args.period))
+            elif args.command == "transfer":
+                _print_json(client.transfer(args.domain, authcode=args.authcode))
+            elif args.command == "restore":
+                _print_json(client.restore(args.domain))
+            elif args.command == "autorenewal":
+                _print_json(client.get_autorenewal(args.domain))
+            elif args.command == "autorenewal-manage":
+                _print_json(
+                    client.manage_autorenewal(
+                        args.domain,
+                        enabled=args.action == "enable",
+                        payment_method=args.payment_method,
+                    )
+                )
+            elif args.command == "dns-records":
+                _print_json(client.get_dns_records(args.domain))
+            elif args.command == "dns-create":
+                record: dict[str, Any] = {
+                    "host": args.host,
+                    "type": args.type_,
+                    "ttl": args.ttl,
+                    "destination": args.destination,
+                }
+                if args.priority is not None:
+                    record["priority"] = args.priority
+                _print_json(client.create_dns_record(args.domain, record=record))
+            elif args.command == "dns-delete":
+                _print_json(client.delete_dns_record(args.domain, host=args.host, type_=args.type_))
+            elif args.command == "price":
+                _print_json(client.get_price(args.tld, args.action))
+            elif args.command == "periods":
+                _print_json(client.get_periods(args.tld, args.action))
             elif args.command == "balance":
                 _print_json(client.balance())
             else:
