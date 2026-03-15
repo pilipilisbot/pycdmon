@@ -1,0 +1,1713 @@
+FORMAT: 1A
+
+# API de Dominis i DNS de cdmon
+
+Aquesta és la pàgina oficial de la documentació oficial de l'API de dominis i DNS de [**cdmon**](https://www.cdmon.com/ca/). En aquest document es recullen les preguntes més freqüents, així com una descripció tècnica del que abasta la mateixa. També serà el canal que utilitzarem per defecte per notificar incidències.
+
+---
+
+# Índex de continguts
+
++ Avisos i notificacions
++ Mètodes disponibles
++ Procediment
++ Endpoints
++ Errors més comuns per Endpoint
++ F.A.Q
+
+---
+
+# Avisos i notificacions
+
+En aquest apartat es notificaran els avisos importants i incidències.
+
+---
+
+# Endpoints disponibles
+
+Per realitzar operacions de prova, pots usar l'opció "switch to console" d'Apiary, però tingues en compte que el resultat és estàtic (només serveix per validar l'estructura de la petició i resposta).
+
+**Important**
+La URL de l'API de producció és `https://api-domains.cdmon.services/api-domains/`. Tingues en compte que en usar-la juntament amb la teva API Key, estaràs realitzant operacions **REALS**, és a dir, tenen efecte al teu compte i saldo (si escau).
+
+Per realitzar qualsevol operació, s'haurà d'efectuar davant una URL amb l'operació de la següent forma: *URLBASE/endpoint*.
+
+Exemple d'URL per realitzar la petició de *check*: `https://api-domains.cdmon.services/api-domains/check`.
+
+Els Endpoints disponibles vénen en aquesta taula.
+
+| Operació                                | Endpoint             | Disponibilitat | Cobrament   | Notes |
+|-----------------------------------------|----------------------|----------------|-------------|-------|
+| Check                                   | check                | &#10004;       |             |       |
+| Info                                    | info                 | &#10004;       |             |       |
+| Obtenir Auth Code                       | authcode             | &#10004;       |             |       |
+| Registre                                | create               | &#9888;        | &#8364;     |       |
+| Renovació                               | renew                | &#10004;       | &#8364;     |       |
+| Transferència                           | transfer             | &#10004;       | &#8364; (*) |       |
+| Restauració                             | restore              | &#10004;       | &#8364;     |       |
+| Gestionar SV DNS                        | dns                  | &#10004;       |             |       |
+| Activar/Desactivar bloqueig             | block                | &#10004;       |             |       |
+| Modificar dades de contacte             | modify               | &#10004;       |             |       |
+| Activar/Desactivar DNSSEC               | dnssec               | &#10004;       |             |       |
+| Enviar DNS Key                          | add                  | &#10004;       |             |       |
+| Activar/Desactivar WHOIS privat         | whoisprivate         | &#10004;       |             |       |
+| Obtenir preus                           | getPrice             | &#10004;       |             |       |
+| Obtenir períodes                        | getPeriods           | &#10004;       |             |       |
+| Comprovar estat dels endpoints          | status               | &#10004;       |             |       |
+| Llistar dominis                         | domains/list         | &#10004;       |             |       |
+| Llistar registres DNS                   | getDnsRecords        | &#10004;       |             |       |
+| Crear registres DNS                     | dnsrecords/create    | &#10004;       |             |       |
+| Editar registres DNS                    | dnsrecords/edit      | &#10004;       |             |       |
+| Eliminar registres DNS                  | dnsrecords/delete    | &#10004;       |             |       |
+| Obtenir estat de renovació automàtica   | autorenewal          | &#10004;       |             |       |
+| Activar/Desactivar renovació automàtica | autorenewal/manage   | &#10004;       |             |       |
+| Obtenir resum de saldo                  | balance              | &#10004;       |             |       |
+
+(*) Hi ha extensions com el .es, el preu de transferència de les quals és de 0 €.
+
+##### Llegenda d'icones:
+
+| Icona    | Descripció                                          |
+|----------|-----------------------------------------------------|
+| &#10004; | Operació plenament funcional.                       |
+| &#10006; | Operació no disponible temporalment.                |
+| &#9888;  | Operació disponible però amb una incidència activa. |
+| &#8364;  | Operació que comporta cobrament.                    |
+
+---
+
+# Procediment
+
+#### Primers passos
+
+Per poder començar a utilitzar la nostra API, abans de res, hauràs de donar-te d'alta per poder obtenir la teva API Key.
+
+Per fer-ho, accedeix al teu panell de control *Usuari i seguretat* > *Gestió API Key*. Trobaràs un camp anomenat *Activar API Key*.
+Hauràs de seguir els passos que es mostrin per poder incorporar-te a l'API. Totes aquestes verificacions són per motius de seguretat.
+
+Un cop finalitzats aquests passos, disposaràs de la teva API Key. Per conèixer com realitzar les peticions, n'hi haurà prou amb que accedeixis a l'apartat d'[*Endpoints*](https://apidedominios.docs.apiary.io/reference/endpoints) d'aquesta documentació.
+
+#### On puc consultar un dubte genèric?
+
+Disposes en aquesta mateixa documentació de dos apartats que et poden ser d'utilitat:
++ F.A.Q: Es resoldran els dubtes més generals.
++ Errors: Es mostraran els errors que poden donar les peticions, les raons i la solució a la mateixa.
+
+Si tot i així tens qualsevol altra consulta, podràs [*contactar amb nosaltres*](https://www.cdmon.com/es/nosotros/contactar) en qualsevol moment.
+
+L'API de Dominis es tracta d'una eina en continu creixement, per això, per a millores i feedback disposem d'un correu electrònic específicament per a aquesta funció: `api.dom@cdmon.com`. Si us plau, tingues en compte que aquest correu té com a comès únicament recollir els suggeriments; no s'atendran qüestions tècniques.
+
+---
+
+# Group Endpoints
+
+Els resultats es retornaran amb una resposta HTTPS, depenent de l'èxit/error i del tipus d'operació.
+
+| Codi | Significat del codi | Descripció |
+|:-----|---------------------|------------|
+| 200  | OK  | Informa que l'operació s'ha realitzat correctament. Inclou el cos amb els recursos. |
+| 403  | KO  | Informa que l'operació ha fallat. Inclou el cos amb la(es) raó(ons). |
+| 500  | KO  | El servidor ha trobat una excepció no controlada. |
+
+Tingues en compte que per poder realitzar qualsevol petició és necessària una `<APIKEY>` que s'aconsegueix seguint les instruccions de l'apartat: [*primers passos*](https://apidedominios.docs.apiary.io/introduction/procedimiento/primeros-pasos), d'aquesta documentació. Aquesta cadena (APIKEY) haurà de ser afegida en cadascuna de les peticions sense cometes ni cap caràcter especial. Així mateix, el camp `<DOMAIN>` serà un *String* de la forma: *nomdedomini.tld*. Finalment, el camp *authcode* es tracta d'un altre *String* amb caràcters especials.
+
+---
+
+## Estat de l'Endpoint [/status]
+
+Podràs comprovar si un endpoint està disponible per al seu ús mitjançant aquesta operació, enviant com a paràmetre un dels següents codis associats a cada endpoint.
+
+| Endpoint           | Paràmetre per validar (action) |
+|:-------------------|-------------------------------|
+| /check             | check                         |
+| /info              | info                          |
+| /authcode          | authcode                      |
+| /block             | block                         |
+| /whoisprivate      | whoisprivate                  |
+| /dnssec            | dnssec                        |
+| /dns               | dns                           |
+| /register          | register                      |
+| /renew             | renew                         |
+| /autorenewal       | autorenewal                   |
+| /balance           | balancesummary                |
+| /restore           | restore                       |
+| /sendDnsKey        | senddnskey                    |
+| /getDnsRecords     | getdnsrecords                 |
+| /dnsrecords/create | creatednsrecords               |
+| /dnsrecords/edit   | editdnsrecords                |
+| /dnsrecords/delete | deletednsrecords               |
+| /getPrice          | getprice                      |
+| /getPeriods        | getperiods                    |
+| /contacts/modify   | modifycontact                 |
+
+Retorna `response`
+
+### POST | Status [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"action": "<ENDPOINT>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Endpoint <ENDPOINT> is available",
+            "result": {
+              "available": true
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Check [/check]
+
+Podràs comprovar si un domini està disponible per al registre mitjançant aquesta operació. N'hi haurà prou amb introduir el domini en el qual estiguis interessat/da!
+
+Retorna `response`
+
+### POST | Check domain [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "domain its not available",
+            "result": {
+              "available": false
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Info [/info]
+
+Et retornarà tota la informació relativa al teu domini. Serà necessari el domini a consultar i l'Auth Code en la majoria dels casos. En el cas particular d'una extensió .es, no serà necessari incloure al body el camp Auth Code.
+
+Aquesta operació només podrà realitzar-se sobre dominis que siguin de la teva propietat.
+
+Retorna `response`
+
+### POST | Info domain [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "authcode": "<authcode>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Info was successful",
+            "result": {
+              "contacts": [
+                {
+                  "type": 0,
+                  "firstName": "Juan",
+                  "lastName": "Rojas",
+                  "company": "",
+                  "address1": "Calle Girona",
+                  "address2": "",
+                  "city": "Malgrat de Mar",
+                  "province": "BARCELONA",
+                  "country": "ES",
+                  "postalCode": "08380",
+                  "phone": "+34.911822767",
+                  "fax": "",
+                  "email": "api.dom@cdmon.com",
+                  "nif": "99999999K",
+                  "legalForm": "",
+                  "language": "",
+                  "phonePrefix": "34",
+                  "id": "",
+                  "idContact": "",
+                  "isCompany": "NO"
+                },
+                {
+                  "type": 1,
+                  "firstName": "Juan",
+                  "lastName": "Rojas",
+                  "company": "",
+                  "address1": "Calle Girona",
+                  "address2": "",
+                  "city": "Malgrat de Mar",
+                  "province": "BARCELONA",
+                  "country": "ES",
+                  "postalCode": "08380",
+                  "phone": "+34.911822767",
+                  "fax": "",
+                  "email": "api.dom@cdmon.com",
+                  "nif": "99999999K",
+                  "legalForm": "",
+                  "language": "",
+                  "phonePrefix": "34",
+                  "id": "",
+                  "idContact": "",
+                  "isCompany": "NO"
+                },
+                {
+                  "type": 2,
+                  "firstName": "Juan",
+                  "lastName": "Rojas",
+                  "company": "",
+                  "address1": "Calle Girona",
+                  "address2": "",
+                  "city": "Malgrat de Mar",
+                  "province": "BARCELONA",
+                  "country": "ES",
+                  "postalCode": "08380",
+                  "phone": "+34.911822767",
+                  "fax": "",
+                  "email": "api.dom@cdmon.com",
+                  "nif": "99999999K",
+                  "legalForm": "",
+                  "language": "",
+                  "phonePrefix": "34",
+                  "id": "",
+                  "idContact": "",
+                  "isCompany": "NO"
+                },
+                {
+                  "type": 3,
+                  "firstName": "Juan",
+                  "lastName": "Rojas",
+                  "company": "",
+                  "address1": "Calle Girona",
+                  "address2": "",
+                  "city": "Malgrat de Mar",
+                  "province": "BARCELONA",
+                  "country": "ES",
+                  "postalCode": "08380",
+                  "phone": "+34.911822767",
+                  "fax": "",
+                  "email": "api.dom@cdmon.com",
+                  "nif": "99999999K",
+                  "legalForm": "",
+                  "language": "",
+                  "phonePrefix": "34",
+                  "id": "",
+                  "idContact": "",
+                  "isCompany": "NO"
+                }
+              ],
+              "hostData": {
+                "DNS": [
+                  {"Host": "ns1.cdmon.net", "Ip": ""},
+                  {"Host": "ns2.cdmon.net", "Ip": ""},
+                  {"Host": "ns3.cdmon.net", "Ip": ""},
+                  {"Host": "ns4.cdmondns-01.org", "Ip": ""}
+                ]
+              },
+              "status": ["ok"],
+              "authCode": "0nvaE8H5",
+              "domain": "wiseroad.cat",
+              "domainAscii": "",
+              "years": 3,
+              "expirationDate": 1774440330,
+              "expirationDateUtc": "",
+              "expirationDateEpp": "2026-03-25T13:05:30",
+              "creationDateEpp": "2022-03-25T13:05:30",
+              "creationDateUtc": 1648209930,
+              "dnsSec": "disabled",
+              "whoisPrivate": "disabled",
+              "domainBlock": "enabled"
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Obtenir l'Auth Code del domini [/authcode]
+
+Podràs consultar l'Auth Code de qualsevol dels teus dominis.
+
+Retorna `response`
+
+### POST | Get Domain Authcode [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>","action":"get"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Authcode obtained successfully",
+            "result": {
+              "authcode": "xxxxxxxx"
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "THE AUTHCODE FOR test.com IS NOT AVAILABLE"
+        }
+
+---
+
+## Llistar dominis [/domains/list]
+
+Podràs obtenir un llistat dels teus dominis amb tota la informació associada a ells o només amb els noms de domini.
+
+Tingues en compte que serà necessari enviar el paràmetre `extended_info` amb valor 1 si vols obtenir tota la informació relativa a cada domini, o el valor 0 en el cas que només vulguis obtenir els noms de dominis.
+
+Retorna `response`
+
+### POST | Get Domains List [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"extended_info": 1}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Domain list with extended info for client apidedominios",
+            "result": [
+              {
+                "domain": "test.com",
+                "contacts": {
+                  "owner": {
+                    "name": "Test owner",
+                    "email": "test@test.com",
+                    "phone": "+34.935769241"
+                  },
+                  "administrative": {
+                    "name": "Test Admin",
+                    "email": "test@test.com",
+                    "phone": "+34.935769241"
+                  },
+                  "billing": {
+                    "name": "Test Billing",
+                    "email": "test@test.com",
+                    "phone": "+34.935769241"
+                  },
+                  "technical": {
+                    "name": "Test Tech",
+                    "email": "test@test.com",
+                    "phone": "+34.935769241"
+                  }
+                },
+                "registration_date": "27/10/2016",
+                "expiration_date": "27/12/2022",
+                "dns_zones": [
+                  "ns1.cdmon.net",
+                  "ns2.cdmon.net",
+                  "ns3.cdmon.net"
+                ],
+                "autorenew": false
+              }
+            ]
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "USER NOT FOUND"
+        }
+
+---
+
+## Activar/desactivar Bloqueig [/block]
+
+Gràcies a aquesta operació podràs afegir un plus de seguretat al teu domini. Això impedirà que, per exemple, pugui ser transferit.
+
+Tingues en compte que serà necessari establir l'acció que es vol realitzar a la petició. N'hi haurà prou amb afegir un atribut `block` o `unblock` al camp *action*.
+
+Retorna `response`
+
+### POST | Activate / deactivate domain block [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "action": "block"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Domain <DOMAIN> blocked",
+            "result": {
+              "blocked": true
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Activar/desactivar Whois Privat [/whoisprivate]
+
+Podràs triar si vols mostrar o no les dades de contacte quan es realitzi un WHOIS d'un domini. Tingues en compte que no totes les extensions permeten canviar aquest estat i que el domini haurà d'estar desbloquejat.
+
+Hauràs també d'afegir l'acció que desitgis realitzar dins de l'atribut action a la petició. Els possibles valors són: `enable` i `disable`.
+
+Retorna `response`
+
+### POST | Activate / deactivate WhoIs Private [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "action": "enable"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "WhoIs private enabled for the domain <DOMAIN>",
+            "result": {
+              "enabled": true
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Activar/desactivar DNSSEC [/dnssec]
+
+Amb això, podràs afegir una capa addicional de seguretat als servidors DNS d'un domini, prevenint-lo d'un nombre elevat d'activitats malicioses. Serà necessari que el domini no estigui bloquejat.
+
+Hauràs també d'afegir l'acció que desitgis realitzar dins de l'atribut action a la petició. Els possibles valors són: `enable` i `disable`.
+
+Retorna `response`
+
+### POST | Enable / disable domain DNSSEC [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "action": "enable"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "DNSSEC enabled for domain <DOMAIN>",
+            "result": {
+              "enabled": true
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Actualitzar servidors de noms [/dns]
+
+Amb això, podràs afegir les adreces dels servidors DNS d'un domini. Serà necessari que el domini no estigui bloquejat.
+
+Hauràs d'afegir les adreces (com a mínim dues) que desitgis per al canvi de DNS. Per exemple: `NS1` = "ns1.cdmon.net" i `NS2` = "ns2.cdmon.net".
+
+Retorna `response`
+
+### POST | Update nameservers [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "ns": {"ns1": "<NS1>", "ns2": "<NS2>"}}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Nameservers updated for the domain <DOMAIN>",
+            "result": {
+              "ns1": "<NS1>",
+              "ns2": "<NS2>"
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Registrar un nou domini [/register]
+
+Podràs registrar un domini en qualsevol moment. Tingues en compte que el domini haurà d'estar disponible i que depenent de l'extensió que triïs hauràs d'omplir el cos de la petició amb unes dades o altres.
+
+Ves amb compte, ja que aquesta operació comporta una **despesa de saldo** corresponent amb el que sortiria si es realitzés el procés per la nostra web comercial. No et preocupis per les ofertes, ja que es respectarà la quantitat de dominis que disposes i s'aplicaran els [*descomptes per volum*](https://www.cdmon.com/es/dominios/precios-descuentos).
+
+Per poder consultar els camps que són necessaris a les peticions de registre per extensió i la correspondència de dades, mira la secció [*particularitats de registre*](https://apidedominios.docs.apiary.io/reference/particularidades-del-registro) d'aquesta documentació.
+
+Retorna `response`
+
+### POST | Register a new domain [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            User-Agent: resellertool documentation
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "period": 1, "intended_use": "<INTENDEDUSE>", "contact": {"user_type": 2, "name": "<NAME>", "lastname": "<LASTNAME>", "identification_type": 1, "identification_number": "<99999999A>", "legal_form": 1, "province": 12, "address": "<ADDRESS>", "city": "<CITY>", "country": "<ES>", "postal_code": "<12345>", "phone": "<+34.000000000>", "email": "<MAIL>"}}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "DOMAIN <DOMAIN> REGISTERED CORRECTLY.",
+            "result": {
+              "registered": true
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Renovació de domini [/renew]
+
+La renovació de dominis serà possible. Per a això, serà necessari un domini sota la teva propietat i el període d'anys pel qual vols renovar-lo.
+
+Tingues en compte que hi ha certes extensions que no poden ser renovades fins que queda menys d'un cert període de temps, com és el cas del .fr.
+
+Retorna `response`
+
+### POST | Domain renewal [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            User-Agent: resellertool documentation
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "period": "1"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Domain <DOMAIN> renewed successfully",
+            "result": {
+              "expire": 1761285420
+            }
+          }
+        }
+
++ Response 403 (application/json)
+
+        {
+          "status": "error",
+          "data": [{}],
+          "message": "not enough balance, please recharge and try again"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "error",
+          "data": [{}],
+          "message": "Error x14123. Please contact us."
+        }
+
+---
+
+## Obtenir l'estat de renovació automàtica del domini [/autorenewal]
+
+Podràs obtenir l'estat de la renovació automàtica per al domini sol·licitat.
+
+En el cas que la renovació automàtica estigui habilitada, es retornarà també el mètode de pagament utilitzat, que podrà ser targeta de crèdit o saldo.
+
+Retorna `response`
+
+### POST | Get domain auto renewal status [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "test.com"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Autorenewal status for domain test.com",
+            "result": {
+              "enabled": false
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Activar/desactivar la renovació automàtica del domini [/autorenewal/manage]
+
+Podràs activar/desactivar la renovació automàtica per al domini sol·licitat.
+
+En el cas de l'activació, serà necessari proporcionar un mètode de pagament vàlid per a això, podent triar entre targeta de crèdit o saldo.
+
+Retorna `response`
+
+### POST | Enable/disable domain auto renewal [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "test.com", "action": "enable", "payment_method": "card"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Automatic renewal enabled for domain test.com"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Obtenir resum de saldo [/balance]
+
+Podràs obtenir el resum del saldo actual per a l'usuari que realitza la petició.
+
+Per poder obtenir el resum serà necessari que l'usuari tingui inicialitzat el saldo.
+
+Retorna `response`
+
+### POST | Get balance summary [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Balance summary for user test",
+            "result": {
+              "Total balance": 9.5,
+              "Available balance": 8,
+              "Blocked balance": 1.5
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Transferència de domini [/transfer]
+
+Pots realitzar peticions de transferència a **cdmon**. Per a això, serà necessari que el domini no tingui l'estat EPP en *transferProhibited* i que l'Auth Code sigui correcte.
+
+Retorna `response`
+
+### POST | Domain transfer [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            User-Agent: resellertool documentation
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "authcode": "<AUTHCODE>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Transfer request of domain <DOMAIN> finished successfully",
+            "result": {
+              "transferRequested": true
+            }
+          }
+        }
+
++ Response 403 (application/json)
+
+        {
+          "status": "error",
+          "message": "Not enough balance"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "error",
+          "data": {
+            "code": "EPP_EXPIRED_DATE_FOA",
+            "msg": "THE DOMAIN CANNOT BE TRANSFERRED. TRANSFER MUST START AT LEAST 7 DAYS PRIOR TO THE DOMAIN EXPIRATION DATE"
+          }
+        }
+
+---
+
+## Restauració [/restore]
+
+Quan un domini es trobi en període de penalització, serà possible restaurar-lo gràcies a aquesta acció.
+
+Retorna `response`
+
+### POST | Restore domain [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            User-Agent: resellertool documentation
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"domain": "<DOMAIN>", "action": "restore"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Restore domain was successful"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Enviar DNS Key [/sendDnsKey]
+
+Quan s'escullen uns DNS externs, és necessari aportar unes signatures per garantir la cadena de seguretat en cas de voler usar DNSSEC.
+
+Per a més informació sobre les particularitats, visita l'apartat [*particularitats d'enviar DNS Key*](https://apidedominios.docs.apiary.io/reference/particularidades-de-send-dns-key) d'aquesta documentació.
+
+Retorna `response`
+
+### POST | Send Dns Key [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "wiseroad.eu", "type": "key", "algorithm": 14, "flags": 257, "pubKey": "<PUBKEY>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "DNS Key was sended to the provider!"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Llistar registres DNS [/getDnsRecords]
+
+Podràs obtenir un llistat de tots els registres DNS associats al domini sol·licitat.
+
+Retorna `response`
+
+### POST | List DNS records [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "test.com"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "DNS records for domain test.com",
+            "result": [
+              {
+                "type": "TXT",
+                "host": "_dmarc",
+                "ttl": 900,
+                "value": "v=DMARC1; p=none; aspf=s; adkim=r;"
+              },
+              {
+                "type": "NS",
+                "host": "@",
+                "ttl": 3600,
+                "value": "ns1.cdmon.net"
+              }
+            ]
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Crear registres DNS [/dnsrecords/create]
+
+Podràs crear registres DNS de tipus A, CNAME i TXT per al domini sol·licitat.
+
+Retorna `response`
+
+### POST | Create DNS records [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "test.com", "type": "A", "ttl": 900, "host": "@", "destination": "testdomain.com"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Record added successfully"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Editar registres DNS [/dnsrecords/edit]
+
+Podràs editar registres DNS de tipus A, CNAME i TXT per al domini sol·licitat.
+
+Retorna `response`
+
+### POST | Edit DNS records [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "resellertool.giving", "current": {"host": "test", "type": "A"}, "new": {"ttl": 1100, "destination": "80.15.14.12"}}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Record updated successfully"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Eliminar registres DNS [/dnsrecords/delete]
+
+Podràs eliminar registres DNS de tipus A, CNAME i TXT del domini sol·licitat.
+
+Retorna `response`
+
+### POST | Delete DNS records [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: P5uDiZaq0qmchH3nCF6ShDR7VtlZhqL6
+
+    + Body
+
+            {"data": {"domain": "resellertool.giving", "type": "A", "host": "test"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Record updated successfully"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Obtenir preu [/getPrice]
+
+Podràs obtenir el preu de les operacions d'Alta, Renovació, Transferència i Restauració per a totes les extensions que tenim disponibles, així podràs saber per endavant quin serà el cost de les operacions que vagis a realitzar.
+
+Retorna `response`
+
+### POST | Get price [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"tld": "<TLD>", "action": "<create/renew/transfer/restore>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Prices for com for action create",
+            "result": {
+              "price": 24.45,
+              "note": "VAT NOT INCLUDED"
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Obtenir períodes [/getPeriods]
+
+Podràs obtenir els períodes disponibles per a les operacions d'Alta i Renovació per a totes les extensions que tenim disponibles, així podràs saber per endavant durant quant de temps pots comprar o renovar el teu domini.
+
+Retorna `response`
+
+### POST | Get periods [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"tld": "<TLD>", "action": "<create/renew>"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": {
+            "msg": "Periods for com for action create",
+            "result": {
+              "period": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+              "particularities": "Cannot be renewed until there are 60 days left until expiration date"
+            }
+          }
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+## Modificar contacte del domini [/contacts/modify]
+
+És possible realitzar la modificació de les dades de contactes dels dominis gràcies a aquest endpoint. És important prestar atenció al fet que no és possible realitzar la modificació de certs camps en alguns TLDs. Per exemple, el contacte owner al .es.
+
+Per a més informació sobre les particularitats, visita l'apartat [*particularitats de la modificació de contactes*](https://apidedominios.docs.apiary.io/reference/particularidades-de-la-modificacion-de-contactos) d'aquesta documentació.
+
+Retorna `response`
+
+### POST | Modify domain contact [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            apikey: <APIKEY>
+
+    + Body
+
+            {"data": {"authcode": "<AUTHCODE>", "domain": "<DOMAIN>", "owner_first_name": "Juan", "owner_surname": "Blanco", "owner_esempresa": 2, "owner_country": "ES", "owner_type_nif": 0, "owner_nif": "xxxxxxxxY", "owner_state": "11", "owner_stateex": "Barcelona", "owner_city": "Barcelona", "owner_postal_code": "08001", "owner_address1": "Calle Barcelona", "owner_prefix": 34, "owner_phone": 111111111, "owner_email": "correo@correo.com"}}
+
++ Response 200 (application/json)
+
+        {
+          "status": "ok",
+          "data": "Contacts were modified!"
+        }
+
++ Response 500 (application/json)
+
+        {
+          "status": "ko",
+          "data": "error"
+        }
+
+---
+
+# Group F.A.Q.
+
+No trobes alguna resposta que necessites? [*Contacta amb nosaltres*](https://www.cdmon.com/es/nosotros/contactar)!
+
+### Costarà diners l'ús de la beta de l'API de dominis?
+L'ús de l'API no comporta cap despesa extra, a part del que es pugui carregar per usar operacions que comportin un cobrament com és el cas del registre, transferència, etc.
+
+### Com es realitzaran els pagaments?
+El mètode de pagament serà mitjançant saldo de *cdmon*. Per a més informació accedeix a: [*Gestió del saldo de l'usuari de cdmon*](https://ticket.cdmon.com/es/support/solutions/articles/7000005645-gesti%C3%B3n-del-saldo-del-usuario-de-cdmon/#:~:text=Para%20acceder%20al%20control%20de,de%20facturaci%C3%B3n%20de%20saldo.).
+
+### Es continuarà aplicant el descompte per volum en dominis?
+Sí, quan es realitzi el cobrament, es continuaran aplicant els descomptes per volum tal com està definit a: [*Preus de dominis i descomptes*](https://www.cdmon.com/es/dominios/precios-descuentos).
+
+### Quins són els preus de cadascuna de les operacions de l'API?
+Els preus de les operacions vénen en aquest enllaç: [*Preus de dominis i descomptes*](https://www.cdmon.com/es/dominios/precios-descuentos)
+
+### Puc generar una nova API Key i donar de baixa l'anterior?
+Sí, és possible. Es realitzarà dins de *Gestió API Key* del *panell de control*.
+
+### Puc donar-me de baixa?
+En qualsevol moment i sense compromís podràs donar-te de baixa. N'hi haurà prou amb desactivar l'API Key dins de *Gestió API Key* del *panell de control*.
+
+### Quins són els límits de peticions de l'API?
+Es podrà realitzar un màxim de 10.000 peticions diàries. Així mateix, també hi haurà un límit de 3 peticions per segon.
+
+### Què passa quan arribo al límit de peticions de l'API diàries?
+Simplement, no podràs realitzar més peticions durant aquell dia. No suposarà cap cost addicional.
+
+### Què és l'Auth Code?
+Un Auth Code (també anomenat codi d'autorització, codi d'autenticació o codi de transferència) és un codi creat per un registrador per ajudar a identificar el titular d'un nom de domini en un domini genèric de nivell superior (gTLD) funcionant sota contracte amb la ICANN.
+
+Un Auth Code és requerit per transferir un nom de domini d'un registrador a un altre o per obtenir informació sobre un domini.
+
+---
+
+# Group Errors comuns
+
++ `message: "You cannot consume this service"` Denota que cert endpoint no està disponible per manteniment.
++ `message: "No API key found in request"` No s'ha enviat l'API Key a la capçalera de la petició.
++ `message: "Invalid authentication credentials"` L'API Key enviada a la petició és incorrecta.
++ `Exception::Parameter 'domain' not defined in the request` No s'ha inclòs el camp domini al body de la petició.
++ `Exception::Specified user is not the domain owner` L'API Key no es correspon amb l'usuari del qual és propietari dit domini.
++ `data: "THE ACTION REQUIRED (action) IS NOT IMPLEMENTED"` El camp action especificat no està definit. Pot donar-se, per exemple, al camp action del DNSSEC, quan s'introdueix un valor no vàlid.
++ `"data": "DOMAIN BLOCKED"` L'acció no pot ser realitzada perquè el domini es troba actualment bloquejat.
++ `"data": "Error exceptionComandaException::USUARIFACTURACIO_UNDEFINED"` No hi ha definit cap usuari de facturació.
+
+---
+
+# Group Particularitats del registre
+
+En aquest apartat descriurem com ha de compondre's el camp body de la petició atenent a les extensions especials.
+
+#### CAT, GAL, EUS, BARCELONA, MADRID, SCOT, SPORT i RADIO
+
+Dominis **.cat, .gal, .eus, .barcelona, .madrid, .scot, .sport, .radio**: s'ha d'especificar la "intenció d'ús" del domini. Un exemple:
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "intended_use": "Intenció d'ús"
+  }
+}
+```
+
+#### US
+
+Dominis **.us**: S'han d'especificar els següents paràmetres. Un exemple:
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "app_purposse": "P1",
+    "origin_country": "US",
+    "applicant_type": "C11"
+  }
+}
+```
+
+`app_purposse` pot prendre els següents valors:
+
+| Codi | Significat                                                   |
+|------|--------------------------------------------------------------|
+| P1   | Ús per a negocis comercials                                  |
+| P2   | Ús per a negocis no comercials, clubs, associacions...       |
+| P3   | Ús personal                                                  |
+| P4   | Ús educatiu                                                  |
+| P5   | Ús governamental                                             |
+
+`applicant_type` pot prendre els següents valors:
+
+| Codi | Significat                                                                      |
+|------|---------------------------------------------------------------------------------|
+| C11  | Soc ciutadà dels Estats Units                                                   |
+| C12  | Soc resident permanent dels Estats Units o territori seu                        |
+| C21  | Organització dels EUA en un dels 50 estats                                      |
+| C31  | Mantinc negocis regulars amb els Estats Units                                   |
+| C32  | La meva entitat té una oficina o infraestructura als Estats Units               |
+
+#### FR
+
+Dominis: *.fr*: es diferencia segons si el client és un "particular" o una "empresa".
+
+##### Particular
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "user_type": "particular",
+    "country": "FR",
+    "birth_date": "1978-12-18"
+  }
+}
+```
+
+##### Empresa
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "user_type": "company",
+    "vat": "F6549449"
+  }
+}
+```
+
+#### IT
+
+Dominis: *.it*: es diferencia segons si el client és un "particular" o una "empresa".
+
+##### Particular
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "user_type": "particular",
+    "vat": "72848002X"
+  }
+}
+```
+
+##### Empresa
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "user_type": "company",
+    "vat": "12345678901"
+  }
+}
+```
+
+#### PT
+
+Dominis: *.pt*: és obligatori afegir l'identificador del propietari i del contacte tècnic.
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "owner_identification": "64628914H",
+    "tech_identification": "72848002X"
+  }
+}
+```
+
+##### Empresa
+
+```csharp
+{
+  "data":{
+    "domain": "<DOMAIN>",
+    "period": 1,
+    "user_type": "company",
+    "vat": "12345678901"
+  }
+}
+```
+
+#### ES
+
+Petició per a una request amb país Espanya:
+
+```csharp
+{
+  "data":
+  {
+    "domain": "register-test.es",
+    "period": 1,
+    "contact": {
+      "user_type": 1,
+      "name": "Customer name",
+      "lastname": "Customer lastname",
+      "company_name": "Company name",
+      "legal_form": 612,
+      "position_in_company": "Company position",
+      "identification_type": 1,
+      "identification_number": "BXXXXXXXX",
+      "province": 46,
+      "address": "Company address",
+      "city": "Company city",
+      "country": "ES",
+      "postal_code": "Company postal code",
+      "phone": "+34.xxxxxxxxx",
+      "email": "correo@test.es"
+    }
+  }
+}
+```
+
+`province` es correspon amb els dos primers dígits de la província espanyola del contacte. Per exemple, per al cas de Barcelona, `08001`, província es correspondria amb `08`.
+
+On el codi o ID de la província pot ser consultat en aquest [*enllaç*](https://www.ine.es/daco/daco42/codmun/cod_provincia.htm).
+
+`user_type` té la correspondència següent:
+
+| Codi | Significat          |
+|------|---------------------|
+| 1    | Empresa             |
+| 2    | Particular          |
+| 3    | Autònom/Freelance   |
+
+`legal_form` es correspon amb els codis següents:
+
+| Codi | Significat                                              |
+|------|---------------------------------------------------------|
+| 39   | Agrupació d'Interès Econòmic                            |
+| 47   | Associació                                              |
+| 59   | Associació Esportiva                                    |
+| 68   | Associació Gremial                                      |
+| 124  | Caixa d'Estalvis                                        |
+| 150  | Comunitat de Béns                                       |
+| 152  | Comunitat de Propietaris                                |
+| 164  | Congregació o Institució Religiosa                      |
+| 181  | Consolat                                                |
+| 197  | Corporació de Dret Públic                               |
+| 203  | Ambaixada                                               |
+| 229  | Entitat Local                                           |
+| 269  | Federació Esportiva                                     |
+| 286  | Fundació                                                |
+| 365  | Mútua d'Assegurances                                    |
+| 434  | Òrgan de l'Administració Autonòmica                     |
+| 436  | Òrgan de l'Administració de l'Estat                     |
+| 439  | Partit Polític                                          |
+| 476  | Sindicat                                                |
+| 510  | Societat Agrària de Transformació                       |
+| 524  | Societat Anònima (S.A.)                                 |
+| 525  | Societat Anònima Esportiva                              |
+| 554  | Societat Civil                                          |
+| 560  | Societat Col·lectiva                                    |
+| 562  | Societat Comanditària                                   |
+| 566  | Societat Cooperativa                                    |
+| 608  | Societat Laboral Limitada                               |
+| 612  | Societat Limitada (S.L.)                                |
+| 713  | Sucursal a Espanya                                      |
+| 717  | Unió Temporal d'Empreses                                |
+| 744  | Societat Anònima Laboral                                |
+| 745  | Organisme Públic Autonòmic                              |
+| 746  | Organisme Públic Estatal                                |
+| 747  | Organisme Públic Local                                  |
+| 877  | Altres                                                  |
+| 878  | Consell Regulador de Denominació d'Origen               |
+| 879  | Organisme Gestor d'Espai Natural                        |
+
+Els codis dels països per al camp `country` segueixen l'estàndard ISO-3166-1. Aquí us deixem alguns exemples:
+
+| Codi | País           |
+|------|----------------|
+| ES   | Espanya        |
+| AR   | Argentina      |
+| MX   | Mèxic          |
+| CL   | Xile           |
+| PE   | Perú           |
+| CO   | Colòmbia       |
+| VE   | Veneçuela      |
+| EC   | Equador        |
+| US   | Estats Units   |
+| FR   | França         |
+
+---
+
+# Group Particularitats de la modificació de contactes
+
+## Particularitats per a esEmpresa
+
+| Descripció  | Valor |
+|-------------|-------|
+| Empresa     | 1     |
+| Particular  | 2     |
+
+## Particularitats per a type nif
+
+| Descripció | Valor |
+|------------|-------|
+| NIF        | 1     |
+| NIE        | 3     |
+| Altres     | 0     |
+
+## Particularitats per a state
+
+Només si el país és Espanya (ES)
+
+| Descripció             | Valor |
+|------------------------|-------|
+| Àlaba                  | 1     |
+| Albacete               | 2     |
+| Alacant                | 3     |
+| Almeria                | 4     |
+| Astúries               | 33    |
+| Àvila                  | 5     |
+| Badajoz                | 6     |
+| Barcelona              | 8     |
+| Burgos                 | 9     |
+| Càceres                | 10    |
+| Cadis                  | 11    |
+| Cantàbria              | 39    |
+| Castelló               | 12    |
+| Ceuta                  | 51    |
+| Ciudad Real            | 13    |
+| Còrdova                | 14    |
+| Conca                  | 16    |
+| Girona                 | 17    |
+| Granada                | 18    |
+| Guadalajara            | 19    |
+| Guipúscoa              | 20    |
+| Huelva                 | 21    |
+| Osca                   | 22    |
+| Illes Balears          | 7     |
+| Jaén                   | 23    |
+| La Corunya             | 15    |
+| La Rioja               | 26    |
+| Les Palmes             | 35    |
+| Lleó                   | 24    |
+| Lleida                 | 25    |
+| Lugo                   | 27    |
+| Madrid                 | 28    |
+| Màlaga                 | 29    |
+| Melilla                | 52    |
+| Múrcia                 | 30    |
+| Navarra                | 31    |
+| Ourense                | 32    |
+| Palència               | 34    |
+| Pontevedra             | 36    |
+| Salamanca              | 37    |
+| Santa Cruz de Tenerife | 38    |
+| Segòvia                | 40    |
+| Sevilla                | 41    |
+| Sòria                  | 42    |
+| Tarragona              | 43    |
+| Terol                  | 44    |
+| Toledo                 | 45    |
+| València               | 46    |
+| Valladolid             | 47    |
+| Biscaia                | 48    |
+| Zamora                 | 49    |
+| Saragossa              | 50    |
+
+---
+
+# Group Particularitats d'enviar DNS Key
+
+## Valors permesos per a algorithm
+
+| Algorismes         | Valor |
+|--------------------|-------|
+| RSAMD5             | 1     |
+| DH                 | 2     |
+| DSA-SHA-1          | 3     |
+| RSASHA1            | 5     |
+| DSA-NSEC3-SHA1     | 6     |
+| RSA SHA1-NSEC3-SHA | 7     |
+| RSASHA256          | 8     |
+| RSASHA512          | 10    |
+| ECC-GOST           | 12    |
+| ECDSA Curve P-256  | 13    |
+| ECDSA Curve P-384  | 14    |
+| ed25519            | 15    |
+| ed448              | 16    |
+| PRIVATEDNS         | 253   |
+| PRIVATEOID         | 254   |
+
+## Valors permesos per a digest type
+
+| Algorismes | Valor |
+|------------|-------|
+| SHA-1      | 1     |
+| SHA-256    | 2     |
+| SHA-384    | 4     |
+
+## Valors permesos per a flags
+
+| Algorismes | Valor |
+|------------|-------|
+| ZSK        | 256   |
+| KSK        | 257   |
+
+## Valors permesos per a cada tld
+
+| Tlds       | Keytype | Algorithm                                                                                                                                                       | Digest type                         | Flags               | Notes                                                                  |
+|------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------|---------------------|------------------------------------------------------------------------|
+| .com       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .es        | ds      | 5,7,8,10,12,13,14,15,16                                                                                                                                         | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .cat       | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .net       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .org       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .eu        | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .online    | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .info      | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-2 (2)                 | #                   |                                                                        |
+| .click     | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .name      | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .me        | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .barcelona | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .xxx       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .tel       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .eus       | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .gal       | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .us        | #       | #                                                                                                                                                               | #                                   | #                   | DNSSEC no disponible                                                   |
+| .pt        | #       | #                                                                                                                                                               | #                                   | #                   | DNSSEC no disponible                                                   |
+| .fr        | #       | #                                                                                                                                                               | #                                   | #                   | DNSSEC no disponible                                                   |
+| .uk        | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .ws        | #       | #                                                                                                                                                               | #                                   | #                   | DNSSEC no disponible                                                   |
+| .madrid    | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .dev       | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   |                                                                        |
+| .radio     | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .scot      | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .sport     | key     | DSA-SHA 1 (3) RSA-SHA1 (5) DSA-NSEC3-SHA1 (6) RSASHA1-NSEC3-SHA (7) RSA\|SHA-256 (8) RSA\|SHA-512 (10) ECDSA Curve P-256 (13) ECDSA Curve P-384 (14)          | #                                   | ZSK (256) KSK (257) |                                                                        |
+| .tokyo     | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-2 (2)                 | #                   |                                                                        |
+| .eco       | #       | #                                                                                                                                                               | #                                   | #                   | No funciona l'OTE de proves i no es pot veure la informació.           |
+| .bayern    | ds      | 1,2,3,5,6,7,8,10,12,13,14,253,254                                                                                                                               | SHA-1 (1) SHA-256 (2) SHA-386 (4)   | #                   | El DNSSEC no funciona en PRE.                                          |
