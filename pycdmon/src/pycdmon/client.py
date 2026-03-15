@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import httpx
 
 from .errors import CdmonApiError, CdmonTransportError
@@ -39,7 +37,7 @@ class CdmonDomainsClient:
         if self._owns_client:
             self._client.close()
 
-    def __enter__(self) -> "CdmonDomainsClient":
+    def __enter__(self) -> CdmonDomainsClient:
         return self
 
     def __exit__(self, *_: object) -> None:
@@ -128,7 +126,10 @@ class CdmonDomainsClient:
         )
 
     def set_dnssec(self, domain: str, enabled: bool) -> JsonDict:
-        return self._post("dnssec", {"domain": domain, "action": "enable" if enabled else "disable"})
+        return self._post(
+            "dnssec",
+            {"domain": domain, "action": "enable" if enabled else "disable"},
+        )
 
     def modify_contact(self, payload: ContactModifyPayload) -> JsonDict:
         return self._post("contacts/modify", dict(payload))
@@ -232,7 +233,7 @@ class AsyncCdmonDomainsClient:
         if self._owns_client:
             await self._client.aclose()
 
-    async def __aenter__(self) -> "AsyncCdmonDomainsClient":
+    async def __aenter__(self) -> AsyncCdmonDomainsClient:
         return self
 
     async def __aexit__(self, *_: object) -> None:
