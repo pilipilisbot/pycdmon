@@ -22,5 +22,10 @@ Build and maintain a robust Python SDK for cdmon Domains & DNS API.
 - docs: documentation only
 - test: tests only
 
+## Skill sync (mandatory)
+- Repository skill: `skills/pycdmon-agent/SKILL.md`
+- When public behavior, workflow, commands, supported operations, or validation steps change, update the skill in the same change set.
+- Keep `README.md`, `examples/`, and the skill aligned to avoid agent drift.
+
 ## Safety
 Never print or hardcode API keys in code, docs, examples, tests, or logs.
